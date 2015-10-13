@@ -1,3 +1,3 @@
 # Kaggle: Rossmann Store Sales
 
-TO BE EDITED
+This is a Kaggle project to learn more about [time series forecasting](https://en.wikipedia.org/wiki/Time_series).
