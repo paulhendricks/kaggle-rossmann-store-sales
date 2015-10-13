@@ -1,2 +1,3 @@
-Hello
-hello again
+# Kaggle: Rossmann Store Sales
+
+TO BE EDITED
