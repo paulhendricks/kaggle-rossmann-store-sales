@@ -1,2 +1,5 @@
 **/.idea
 /reports/.ipynb_checkpoints
+.Rproj.user
+.DS_Store
+kaggle-rossman-store-sales.Rproj
