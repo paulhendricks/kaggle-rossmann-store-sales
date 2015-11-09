@@ -22,4 +22,15 @@ train <-
   read.csv("../data/prepped/train.csv", 
            stringsAsFactors = FALSE)
 
+test <- 
+  read.csv("../data/prepped/test.csv", 
+           stringsAsFactors = FALSE)
+
+store <- 
+  read.csv("../data/prepped/store.csv", 
+           stringsAsFactors = FALSE)
+
+# Merge data
+train_list <- 
+  split(train, list(factor(train$Store)))
 
