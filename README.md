@@ -1,5 +1,7 @@
 ## [Kaggle: Rossmann Store Sales](https://www.kaggle.com/c/rossmann-store-sales)
 
+[![Build Status](https://travis-ci.org/paulhendricks/kaggle-rossmann-store-sales.svg)](https://travis-ci.org/paulhendricks/kaggle-rossmann-store-sales)
+
 This is a project to learn more about [time series forecasting](https://en.wikipedia.org/wiki/Time_series) for store sales.
 
 ### Description
