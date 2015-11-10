@@ -115,10 +115,6 @@ rownames(predictions) <- NULL
 # Reorder frame
 predictions <- predictions[, c("Store", "Date", "Sales")]
 
-# Write data out to /data/prepped
-write.csv(predictions, "../data/prepped/predictions.csv", 
-          row.names = FALSE)
-
 # Create submission file
 submission <- merge(test[, c("Id", "Store", "Date")], predictions, 
                     by = c("Store", "Date"))
