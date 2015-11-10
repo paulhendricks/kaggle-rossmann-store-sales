@@ -16,8 +16,6 @@
 
 # Load libraries
 library(forecast)
-library(ggplot2)
-library(dplyr)
 
 # Load data
 train <- 
