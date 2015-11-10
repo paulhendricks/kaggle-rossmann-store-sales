@@ -28,10 +28,6 @@ test <-
   read.csv("../data/prepped/test.csv", 
            stringsAsFactors = FALSE)
 
-store <- 
-  read.csv("../data/prepped/store.csv", 
-           stringsAsFactors = FALSE)
-
 # Not all stores in the training set that are in the test set.
 # All stores in the test set are in the training set.
 x <- unique(train$Store)
@@ -63,16 +59,9 @@ train_list <-
 test_list <- 
   split(test, list(factor(test$Store)))
 
-# Cast data to time series
-cast_df_to_ts <- function(.df) {
-  start_date <- min(as.Date(.df[, "Date"]))
-  return()
-}
-
-.train <- train_list[[1]]
-.test <- test_list[[1]]
-
-make_forecast <- function(.train, .test) {
+# Function to handle making the forecast
+make_forecast <- function(.train, .test, .count) {
+  print(.count)
   # Handle train
   .train <- .train[, c("Date", "Sales")]
   .train_min_date <- min(as.Date(.train[, "Date"]))
@@ -111,7 +100,10 @@ make_forecast <- function(.train, .test) {
 }
 
 # Forecast data
-forecast_list <- Map(make_forecast, train_list[1:5], test_list[1:5])
+t1 <- Sys.time()
+forecast_list <- Map(make_forecast, 
+                     train_list, test_list, 1:length(test_list))
+t2 <- Sys.time(); t2 - t1
 
 # Bring data back together
 predictions <- do.call(rbind, forecast_list)
@@ -123,7 +115,18 @@ rownames(predictions) <- NULL
 # Reorder frame
 predictions <- predictions[, c("Store", "Date", "Sales")]
 
-ggplot(predictions, aes(x = Date, y = Sales, color = factor(Store))) + geom_line()
+# Write data out to /data/prepped
+write.csv(predictions, "../data/prepped/predictions.csv", 
+          row.names = FALSE)
 
+# Create submission file
+submission <- merge(test[, c("Id", "Store", "Date")], predictions, 
+                    by = c("Store", "Date"))
 
+submission <- submission[, c("Id", "Sales")]
+submission <- submission[order(submission[, "Id"]), ]
+rownames(submission) <- NULL
 
+# Write data out to /data/prepped
+write.csv(submission, "../data/prepped/submission-ets.csv", 
+          row.names = FALSE)
