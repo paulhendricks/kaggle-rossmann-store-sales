@@ -16,8 +16,6 @@
 
 # Load libraries
 library(forecast)
-library(ggplot2)
-library(dplyr)
 
 # Load data
 train <- 
@@ -39,7 +37,7 @@ all(y %in% x)
 train <- train[train$Store %in% test$Store, ]
 
 # Aggregate to daily store sales
-train <- aggregate(Sales ~ Store + Date, train, FUN = sum)
+train <- aggregate(Sales ~ Store + Date + DayOfWeek, train, FUN = sum)
 
 # Munge data
 train[, "Date"] <- as.Date(train[, "Date"])
@@ -53,76 +51,18 @@ lapply(test, function(.x) any(is.na(.x)))
 train[, "Sales"] <- ifelse(train[, "Sales"] < 0, 0, train[, "Sales"])
 
 # Split data
-train_list <- 
-  split(train, list(factor(train$Store)))
-
-test_list <- 
-  split(test, list(factor(test$Store)))
-
-# Function to handle making the forecast
-make_forecast <- function(.train, .test, .count) {
-  print(.count)
-  # Handle train
-  .train <- .train[, c("Date", "Sales")]
-  .train_min_date <- min(as.Date(.train[, "Date"]))
-  .train_max_date <- max(as.Date(.train[, "Date"]))
-  
-  .train_frame <- data.frame(Date = seq.Date(from = .train_min_date, 
-                                             to = .train_max_date, 
-                                             by = "day"), 
-                             stringsAsFactors = FALSE)
-  .train <- merge(.train_frame, .train, by = "Date")
-  .train[, "Sales"] <- ifelse(is.na(.train[, "Sales"]), 0, .train[, "Sales"])
-  
-  # Handle test
-  .test <- .test[order(.test[, "Date"]), ]
-  .test <- .test[, "Date", drop = FALSE]
-  .test_min_date <- min(as.Date(.test[, "Date"]))
-  .test_max_date <- max(as.Date(.test[, "Date"]))
-  .test_dates <- seq.Date(from = .test_min_date, 
-                          to = .test_max_date, 
-                          by = "day")
-  
-  # Build model
-  .train_ts <- ts(.train[, "Sales"], start = .train_min_date, frequency = 7)
-  .h <- length(.test_dates)
-  .model <- forecast::auto.arima(.train_ts)
-  
-  # Handle forecasts
-  .forecast <- forecast::forecast(.model, h = .h)
-  .predictions <- data.frame(Date = .test_dates, 
-                             Sales = .forecast$mean, 
-                             stringsAsFactors = FALSE)
-  .predictions[, "Sales"] <- ifelse(.predictions[, "Sales"] < 0, 
-                                    0, .predictions[, "Sales"])
-  .test <- merge(.test, .predictions, all.x = TRUE)
-  return(.test)
-}
-
-# Forecast data
-t1 <- Sys.time()
-forecast_list <- Map(make_forecast, 
-                     train_list, test_list, 1:length(test_list))
-t2 <- Sys.time(); t2 - t1
-
-# Bring data back together
-predictions <- do.call(rbind, forecast_list)
-
-# Work with Store names
-predictions[, "Store"] <- floor(as.numeric(rownames(predictions)))
-rownames(predictions) <- NULL
-
-# Reorder frame
-predictions <- predictions[, c("Store", "Date", "Sales")]
+median_sales_by_store_day <- 
+  aggregate(Sales ~ Store + DayOfWeek, train, FUN = median)
 
 # Create submission file
-submission <- merge(test[, c("Id", "Store", "Date")], predictions, 
-                    by = c("Store", "Date"))
+submission <- merge(test[, c("Id", "Store", "DayOfWeek")], 
+                    median_sales_by_store_day, 
+                    by = c("Store", "DayOfWeek"))
 
 submission <- submission[, c("Id", "Sales")]
 submission <- submission[order(submission[, "Id"]), ]
 rownames(submission) <- NULL
 
 # Write data out to /data/prepped
-write.csv(submission, "../data/prepped/submission-arima.csv", 
+write.csv(submission, "../data/prepped/submission-median-seasonal.csv", 
           row.names = FALSE)
